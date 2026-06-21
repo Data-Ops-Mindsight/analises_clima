@@ -26,6 +26,41 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ---------------------------------------------------------------------------
+# Autenticação
+# ---------------------------------------------------------------------------
+import streamlit_authenticator as stauth
+
+try:
+    _auth_creds = dict(st.secrets["credentials"])
+    _authenticator = stauth.Authenticate(
+        _auth_creds,
+        st.secrets["cookie"]["name"],
+        st.secrets["cookie"]["key"],
+        st.secrets["cookie"]["expiry_days"],
+        auto_hash=False,
+    )
+except KeyError:
+    st.error(
+        "Configuração de autenticação ausente. "
+        "Crie `.streamlit/secrets.toml` a partir do arquivo `.streamlit/secrets.toml.example`."
+    )
+    st.stop()
+
+_authenticator.login()
+
+if st.session_state.get("authentication_status") is not True:
+    if st.session_state.get("authentication_status") is False:
+        st.error("Usuário ou senha incorretos.")
+    else:
+        st.warning("Por favor, faça login para acessar o sistema.")
+    st.stop()
+
+_authenticator.logout("Sair", "sidebar")
+st.sidebar.caption(f"Logado como: {st.session_state.get('name', '')}")
+
+# ---------------------------------------------------------------------------
+
 st.title("Mapa de Calor — Pesquisa de Clima")
 
 # ===========================================================================
