@@ -22,15 +22,27 @@ NORMALIZACAO_NOS = {
 }
 
 
-def _normalizar_no(valor: str) -> str:
-    """Aplica o mapa de normalização a um valor de nó (case-insensitive)."""
-    chave = valor.strip().lower()
-    return NORMALIZACAO_NOS.get(chave, valor.strip())
+def _normalizar_no(valor) -> str:
+    """Aplica o mapa de normalização a um valor de nó (case-insensitive).
+    Robusto a pd.NA, None e strings vazias (backends NumPy e Arrow)."""
+    if valor is None:
+        return valor
+    if not isinstance(valor, str):
+        try:
+            if pd.isna(valor):
+                return valor
+        except (TypeError, ValueError):
+            pass
+    s = str(valor).strip()
+    if s == "" or s.lower() in ("nan", "none", "<na>"):
+        return valor
+    return NORMALIZACAO_NOS.get(s.lower(), s)
 
 
 def normalizar_coluna_nos(serie: pd.Series) -> pd.Series:
-    """Aplica _normalizar_no a todos os valores não-nulos de uma Series."""
-    return serie.where(serie.isna(), serie.astype(str).str.strip().map(_normalizar_no))
+    """Aplica _normalizar_no a todos os valores não-nulos de uma Series.
+    na_action='ignore' garante que nulos (NaN, pd.NA) nunca chegam à função."""
+    return serie.map(_normalizar_no, na_action="ignore")
 
 
 # ---------------------------------------------------------------------------

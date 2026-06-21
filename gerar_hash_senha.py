@@ -6,8 +6,8 @@ import streamlit_authenticator as stauth
 
 senhas = [
     # Adicione quantas senhas quiser:
-    "senha_do_cliente",
-    "senha_do_admin",
+    "Avel@123",
+    "Mind@123",
 ]
 
 hashes = stauth.Hasher.hash_list(senhas)
