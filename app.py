@@ -31,18 +31,26 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 import streamlit_authenticator as stauth
 
+
+def _to_dict(obj):
+    """Converte recursivamente objetos Secrets (imutáveis) em dict Python nativo."""
+    if hasattr(obj, "items"):
+        return {k: _to_dict(v) for k, v in obj.items()}
+    return obj
+
+
 try:
-    _auth_creds = dict(st.secrets["credentials"])
+    _auth_creds = _to_dict(st.secrets["credentials"])
     _authenticator = stauth.Authenticate(
         _auth_creds,
-        st.secrets["cookie"]["name"],
-        st.secrets["cookie"]["key"],
-        st.secrets["cookie"]["expiry_days"],
+        str(st.secrets["cookie"]["name"]),
+        str(st.secrets["cookie"]["key"]),
+        int(st.secrets["cookie"]["expiry_days"]),
         auto_hash=False,
     )
-except KeyError:
+except KeyError as _e:
     st.error(
-        "Configuração de autenticação ausente. "
+        f"Configuração de autenticação ausente (chave: {_e}). "
         "Crie `.streamlit/secrets.toml` a partir do arquivo `.streamlit/secrets.toml.example`."
     )
     st.stop()
